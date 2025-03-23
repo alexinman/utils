@@ -44,6 +44,8 @@ def generate_moves(source_dir, target_dir, flat: false, media_types: nil)
   moves = []
 
   Dir.children(source_dir).sort.each do |file_name|
+    next if file_name.start_with?(".") # skip hidden files
+
     source_file_path = "#{source_dir}/#{file_name}"
 
     if File.directory?(source_file_path)
@@ -98,7 +100,7 @@ def print_progress(start_time, completed_count, total_count)
   estimated_total_time = average_time * total_count
   estimated_time_left = estimated_total_time - elapsed_time
   formatted_time = format_time(estimated_time_left)
-  print "\r(#{completed_count}/#{total_count}) ETA: #{formatted_time}"
+  puts "(#{completed_count}/#{total_count}) ETA: #{formatted_time}"
 end
 
 def format_time(total_seconds)
