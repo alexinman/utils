@@ -2,29 +2,6 @@ require "mime/types"
 require "fileutils"
 require "exif"
 
-method_name, source_dir, target_dir, *rest = ARGV
-unless method_name.to_sym == :mv || method_name.to_sym == :cp
-  warn "Unsupport move type: #{method_name.inspect}"
-  exit 1
-end
-
-unless File.directory?(source_dir.to_s)
-  warn "Source #{source_dir.inspect} is not a directory." 
-  exit 1
-end
-
-unless File.directory?(target_dir.to_s)
-  warn "Target #{target_dir.inspect} is not a directory."
-  exit 1
-end
-
-verbose = !!rest.delete("--verbose")
-noop = !!rest.delete("--noop")
-flat = !!rest.delete("--flat")
-media_types = rest
-
-reorganize(method_name, source_dir, target_dir, verbose:, noop:, flat:, media_types:)
-
 # moves and reorganizes files from source directory into target directory.
 # reorganizes into subdirectories based on creation date.
 def reorganize(method_name, source_dir, target_dir, verbose: false, noop: false, flat: false, media_types: nil)
@@ -131,3 +108,26 @@ def format_time(total_seconds)
   hours = "#{total_minutes / 60}".rjust(2, '0')
   "#{hours}:#{minutes}:#{seconds}"
 end
+
+method_name, source_dir, target_dir, *rest = ARGV
+unless method_name.to_sym == :mv || method_name.to_sym == :cp
+  warn "Unsupport move type: #{method_name.inspect}"
+  exit 1
+end
+
+unless File.directory?(source_dir.to_s)
+  warn "Source #{source_dir.inspect} is not a directory." 
+  exit 1
+end
+
+unless File.directory?(target_dir.to_s)
+  warn "Target #{target_dir.inspect} is not a directory."
+  exit 1
+end
+
+verbose = !!rest.delete("--verbose")
+noop = !!rest.delete("--noop")
+flat = !!rest.delete("--flat")
+media_types = rest
+
+reorganize(method_name, source_dir, target_dir, verbose:, noop:, flat:, media_types:)
