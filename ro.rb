@@ -23,7 +23,9 @@ def reorganize(method_name, source_dir, target_dir, verbose: false, noop: false,
   puts "Moving files... "
   move_start_time = Time.now
   moves.each_with_index do |(source_file_path, target_dir_path, file_name), index|
-    target_file_path = finalize_file_name("#{target_dir_path}/#{file_name}")
+    target_file_path = dedup_file_name(source_file_path, "#{target_dir_path}/#{file_name}")
+    next if target_file_path.nil?
+
     FileUtils.send(method_name, source_file_path, target_file_path, **options)
     print_progress(move_start_time, index + 1, moves.size)
   rescue
@@ -36,6 +38,7 @@ def reorganize(method_name, source_dir, target_dir, verbose: false, noop: false,
   puts "\rDone. Moved #{moves.size} files. Total elapsed time: #{elapsed_time}"
 rescue => e
   puts e.message
+  puts e.backtrace.first(5)
 end
 
 def generate_moves(source_dir, target_dir, flat: false, media_types: nil)
@@ -88,10 +91,17 @@ rescue
   File.birthtime(file_path)
 end
 
-def finalize_file_name(base_file_path, depth = 1)
+def dedup_file_name(source_file_path, base_file_path, depth = 1)
   ext = File.extname(base_file_path)
   full_file_path = depth > 1 ? base_file_path.gsub(ext, "-#{depth}#{ext}") : base_file_path
-  File.exist?(full_file_path) ? finalize_file_name(base_file_path, depth+1) : full_file_path
+
+  if File.exist?(full_file_path)
+    unless File.identical?(source_file_path, full_file_path)
+      dedup_file_name(source_file_path, base_file_path, depth+1)
+    end
+  else
+    full_file_path
+  end
 end
 
 def print_progress(start_time, completed_count, total_count)
