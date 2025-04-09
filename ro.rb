@@ -140,6 +140,6 @@ end
 verbose = !!rest.delete("--verbose")
 noop = !!rest.delete("--noop")
 flat = !!rest.delete("--flat")
-media_types = rest
+media_types = rest + ['image', 'video', 'cr3']
 
 reorganize(method_name, source_dir, target_dir, verbose:, noop:, flat:, media_types:)
