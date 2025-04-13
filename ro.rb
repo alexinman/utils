@@ -62,14 +62,20 @@ def generate_moves(source_dir, target_dir, flat: false, media_types: nil)
 
     target_file_dir = [target_dir, date_path].compact.join("/")
 
-    mime_type = `file --mime-type -b #{source_file_path.inspect}`.chomp
-    extension = MIME::Types[mime_type].first&.extensions&.first
-    target_file_name = extension ? file_name.sub(/\.\w+$/, ".#{extension}") : file_name
+    target_file_name = fix_extension(source_file_path, file_name)
 
     moves << [source_file_path, target_file_dir, target_file_name]
   end
 
   moves
+end
+
+def fix_extension(source_file_path, file_name)
+  return file_name if file_name.end_with?(".CR3")
+
+  mime_type = `file --mime-type -b #{source_file_path.inspect}`.chomp
+  extension = MIME::Types[mime_type].first&.extensions&.first
+  extension ? file_name.sub(/\.\w+$/, ".#{extension}") : file_name
 end
 
 def matches_media_types?(media_types, file_path)
