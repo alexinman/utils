@@ -1,6 +1,7 @@
 require "mime/types"
 require "fileutils"
 require "exif"
+require "pry"
 
 # moves and reorganizes files from source directory into target directory.
 # reorganizes into subdirectories based on creation date.
@@ -74,8 +75,13 @@ def fix_extension(source_file_path, file_name)
   return file_name if file_name.end_with?(".CR3")
 
   mime_type = `file --mime-type -b #{source_file_path.inspect}`.chomp
-  extension = MIME::Types[mime_type].first&.extensions&.first
-  extension ? file_name.sub(/\.\w+$/, ".#{extension}") : file_name
+  valid_extensions = MIME::Types[mime_type].first&.extensions
+  return file_name if valid_extensions.nil?
+
+  _, current_extension = file_name.match(/\.(\w+)$/).to_a
+  return file_name if valid_extensions.include?(current_extension)
+
+  file_name.sub(/#{current_extension}$/, valid_extensions.first)
 end
 
 def matches_media_types?(media_types, file_path)
@@ -88,9 +94,9 @@ end
 def get_date(file_path)
   File.open(file_path) do |file|
     data = Exif::Data.new(file)
-    next File.birthtime(file_path) if data.date_time.nil?
+    next File.birthtime(file_path) if data.date_time_original.nil?
 
-    _, year, month, day, hour, min, sec = data.date_time.match(/(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/).to_a
+    _, year, month, day, hour, min, sec = data.date_time_original.match(/(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/).to_a
     Time.new(year, month, day, hour, min, sec)
   end
 rescue
